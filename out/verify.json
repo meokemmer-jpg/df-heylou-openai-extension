@@ -1,0 +1,12 @@
+{
+  "df": "df-heylou-openai-extension",
+  "ts": "2026-06-08T19:55:09.924624+00:00",
+  "has_src": true,
+  "parse_ok": true,
+  "has_tests": true,
+  "test_ran": true,
+  "tests_passed": true,
+  "code_hash": "33d26c889e1cefb1",
+  "python": "3.14.4",
+  "crux": "[CRUX-MK]"
+}

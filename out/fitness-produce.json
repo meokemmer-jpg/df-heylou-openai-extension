@@ -1,9 +1,9 @@
 {
   "df": "df-heylou-openai-extension",
-  "ts": "2026-06-07T17:53:55.606075+00:00",
+  "ts": "2026-06-09T01:11:37.412183+00:00",
   "ok": true,
-  "bytes": 5309,
-  "model": "kemmer-70b-ctx8k",
+  "bytes": 5247,
+  "model": "kemmer-14b-ctx8k",
   "mode": "produce",
-  "duration_s": 185.7
+  "duration_s": 38.3
 }
