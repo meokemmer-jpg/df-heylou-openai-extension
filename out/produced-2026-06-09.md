@@ -1,29 +1,32 @@
 # df-heylou-openai-extension — PRODUKTION [CRUX-MK]
-*2026-06-09T01:11:37.411145+00:00 | ollama-local/kemmer-14b-ctx8k*
+*2026-06-09T14:37:46.831149+00:00 | ollama-local/kemmer-14b-ctx8k*
 
-# df-heylou-openai-extension: Primäres Output-Artefakt
+# df-heylou-openai-extension: Produktions-Qualität Dokumentation
 
 ## Architekturbeschreibung
 
-Die Dark-Factory `df-heylou-openai-extension` integriert die HeyLou-Funktionalität in das OpenAI Function Calling Muster, um eine vollständige und sichere Anbindung an das Travel-Knowledge-Graph von HeyLou zu gewährleisten. Das System besteht aus mehreren wichtigen Modulen:
+Die Dark-Factory `df-heylou-openai-extension` integriert HeyLou-Funktionen in das OpenAI Function Calling Muster. Das System besteht aus mehreren wichtigen Modulen, die für eine effiziente und sichere Funktionsausführung verantwortlich sind.
 
-### 1. `openai_extension.py`
+### Modul: `openai_extension.py`
 
-Dieses Modul enthält die Definition der Funktionen, die von den Anwendern aufgerufen werden können und direkt zu den entsprechenden Backend-Modulen weitergeleitet werden.
+Dieses Modul enthält die Definition der Funktionen, die von den Anwendern aufgerufen werden können und direkt zu den entsprechenden Backend-Modulen weitergeleitet werden. Ein Beispiel für das Handling einer Function Call ist:
 
 ```python
 def handle_function_call(function_call):
     function_name = function_call['name']
+    
     if function_name == 'search_hotels':
         return search_hotels(**function_call['arguments'])
+    
     elif function_name == 'get_rates':
         return get_rates(**function_call['arguments'])
+    
     # ähnliche Logik für die anderen Funktionen
 ```
 
-### 2. `auth_handler.py`
+### Modul: `auth_handler.py`
 
-Dieses Modul verarbeitet Authentifizierungs- und Berechtigungsanfragen, um sicherzustellen, dass nur berechtigte Benutzer auf die API-Zugriff haben.
+Dieses Modul verarbeitet Authentifizierungs- und Berechtigungsanfragen, um sicherzustellen, dass nur berechtigte Benutzer auf die API-Zugriff haben. Ein Beispiel dafür ist:
 
 ```python
 def verify_phronesis_ticket(ticket):
@@ -33,13 +36,12 @@ def verify_phronesis_ticket(ticket):
         return False
 ```
 
-### 3. `audit_logger.py`
+### Modul: `audit_logger.py`
 
-Dieses Modul speichert jede Funktionseintrag in einer JSONL-Datei für Auditing und Sicherheitszwecke.
+Dieses Modul speichert jede Funktionseintrag in einer JSONL-Datei für Audit-Purposes und Sicherheitszwecke. Ein Beispiel dafür ist:
 
 ```python
 import json
-from datetime import datetime
 
 def log_audit(function_call, result):
     audit_entry = {
@@ -48,14 +50,15 @@ def log_audit(function_call, result):
         'result': result,
         'timestamp': datetime.now().isoformat()
     }
+    
     with open('audit_log.jsonl', 'a') as file:
         json.dump(audit_entry, file)
         file.write('\n')
 ```
 
-### 4. `adapter_orchestrator.py`
+### Modul: `adapter_orchestrator.py`
 
-Dieses Modul ist das Eingangspunkt für die Dark-Factory und startet den LaunchAgent.
+Dieses Modul ist das Eingangspunkt für die Dark-Factory und startet den LaunchAgent. Ein Beispiel dafür ist:
 
 ```python
 if __name__ == "__main__":
@@ -63,74 +66,124 @@ if __name__ == "__main__":
     subprocess.Popen(['launchctl', 'submit', '-l', 'com.kemmer.df-heylou-openai-extension.plist'])
 ```
 
-## Kompilierter LaunchAgent-Plist
+## Sandbox-Modus
+
+Die Sandbox-Einstellungen sind durch Umgebungsvariablen gesteuert. Wenn `DF_HEYLOU_OPENAI_EXT_ENABLED` auf `false` gesetzt ist, werden Mock-Responses für die HeyLou Travel-Knowledge-Graph synthetisiert.
+
+```bash
+# Sandbox aktiviert
+export DF_HEYLOU_OPENAI_EXT_ENABLED=false
+
+# Sandbox deaktiviert und Real Mode aktiviert
+export DF_HEYLOU_OPENAI_EXT_ENABLED=true
+```
+
+### LaunchAgent-Plist Konfigurationen
+
+Die LaunchAgent-Plist-Konfiguration ist wie folgt aufgebaut:
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
-<dict>
-    <key>Label</key><string>com.kemmer.df-heylou-openai-extension</string>
-    <key>ProgramArguments</key>
-    <array>
-        <string>/Users/make/Projects/dark-factories/df-heylou-openai-extension/scripts/run.py</string>
-    </array>
-    <key>StartInterval</key><integer>7200</integer>
-    <key>RunAtLoad</key><true/>
-</dict>
+    <dict>
+        <key>Label</key><string>com.kemmer.df-heylou-openai-extension</string>
+        <!-- weitere Konfigurationen -->
+    </dict>
 </plist>
 ```
 
-## Sandbox-Modus
+## Tests
 
-Für den Testbetrieb können wir die Umgebungsvariable `DF_HEYLOU_OPENAI_EXT_ENABLED` auf `false` setzen, um Mock-Responses zu erhalten. Wenn `true`, wird das System in der Realen Betriebsweise laufen und die Werte für `PHRONESIS_TICKET` und `OPENAI_API_KEY` müssen gesetzt sein.
+Um die Funktionalität der Dark-Factory zu testen, können Sie folgende Befehle ausführen:
 
-## Integrations-Tests
-
-Für die Qualitätssicherung können wir den Testrunner verwenden, um die Funktionalität zu validieren:
 ```bash
 pytest tests/ -v
 ```
 
-### 5. Integration mit AllFly.io (B2B Corporate Travel Booking Platform)
+Dies führt alle im `tests` Verzeichnis definierten Testfälle durch und gibt eine detaillierte Ausgabe.
 
-Um die Integration von HeyLou und OpenAI weiter auszubauen, könnte es sinnvoll sein, zusätzliche Funktionen hinzuzufügen, die speziell für AllFly.io optimiert sind. Hierfür könnten wir den `search_hotels`-Funktion eine zusätzliche Option hinzufügen:
+## Cross-DF-Coupling
+
+Die Dark Factory ist eng mit anderen Backends wie `df-heylou-travel-domain`, `df-pms-mews-adapter`, `df-ota-*` gekoppelt. Diese Couplings werden in den entsprechenden Modulen (z.B. `openai_extension.py`) verwaltet und gesteuert.
+
+### Beispiel für eine Coupling Verwaltung:
 
 ```python
-def search_hotels(location, dates, preferences, allfly_integration=False):
-    if allfly_integration:
-        # Hier wird die Integration mit AllFly.io durchgeführt, z.B. über API-Aufrufe an AllFly.io
-        return df_heylou_allfly_adapter.search_hotels(location, dates, preferences)
-    else:
-        # Standard Hotel-Search im HeyLou Travel-Knowledge-Graph
-        return df_heylou_travel_domain.search_hotels(location, dates, preferences)
+def search_hotels(location, dates, preferences):
+    # Interne API-Anfrage an df-heylou-travel-domain
+    return requests.post('http://localhost:8001/search', json={
+        'location': location,
+        'dates': dates,
+        'preferences': preferences
+    }).json()
 ```
 
-### 6. Kompakt-Anwendungsfälle
+## Kompilierte LaunchAgent-Plist
 
-#### Anwendungsfall: Direktes Buchen über HeyLou
+Die kompilierte LaunchAgent Plist sieht wie folgt aus:
 
-Der Benutzer möchte ein Hotel direkt über die HeyLou-API buchen:
-```python
-book_direct(hotel_id='12345', room_type='suite', guest={'name': 'Max Mustermann'}, dates=('2026-07-10', '2026-07-12'))
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+    <dict>
+        <key>Label</key><string>com.kemmer.df-heylou-openai-extension</string>
+        <!-- weitere Konfigurationen -->
+    </dict>
+</plist>
 ```
 
-#### Anwendungsfall: Revenue-Optimierung
+Diese Plist-Konfiguration startet den LaunchAgent und stellt sicher, dass er regelmäßig gestartet wird.
 
-Der Hotelbetreiber möchte die Revenue für sein Hotel optimieren:
-```python
-optimize_revenue(hotel_id='54321')
+### Startinterval und RunAtLoad
+
+Das `StartInterval` ist auf 7200 Sekunden (2 Stunden) gesetzt. Der `RunAtLoad` ist auf `true`, sodass der Agent beim Systemstart automatisch ausgeführt wird:
+
+```xml
+<key>StartInterval</key><integer>7200</integer>
+<key>RunAtLoad</key><true/>
 ```
 
-#### Anwendungsfall: OTA-Spread Vergleich
+## Kompilierte API-Definitionen
 
-Ein Manager möchte wissen, wie sich die Preise von Booking.com, Expedia und HRS im Vergleich zu den direkt gebuchten Tarifen unterscheiden:
+Die Definition der Funktionen, die vom Modell aufgerufen werden können, sieht wie folgt aus:
+
 ```python
-compare_otas(hotel_id='98765', dates=('2026-10-15', '2026-10-17'))
+tools = [
+    {"name": "search_hotels", 
+     "description": "Hotel-Search im HeyLou Travel-Knowledge-Graph",
+     "parameters_schema": {"type": "object", "properties": {
+         "location": {"type": "string"}, 
+         "dates": {"type": "array", "items": {"type": "string"}}, 
+         "preferences": {"type": "object"}
+     }}},
+    # ähnliche Definitionen für die anderen Funktionen
+]
 ```
 
 ## Schlussfolgerung
 
-Die Dark-Factory `df-heylou-openai-extension` ermöglicht es, die vollständige Funktionalität von HeyLou direkt in OpenAI Function Calling integriert zu verwenden. Durch zusätzliche Modulare Erweiterungen und Sandbox-Betriebsarten kann diese Lösung flexibel für verschiedene Anwendungsfall-Szenarien genutzt werden, einschließlich der Integration mit AllFly.io.
+Die Dark-Factory `df-heylou-openai-extension` bietet eine effiziente und sichere Methode, um HeyLou-Funktionen im OpenAI Function Calling Framework zu integrieren. Durch die Integration von Authentifizierung, Logging und Cross-DF Coupling bietet sie ein vollständiges Solution für fortgeschrittene Anwendungen.
 
-Diese Architektur bietet eine sichere, flexible und skalierbare Methode zur Implementierung von Travel-Technologien in den OpenAI Ecosystem.
+### Dokumentation der Funktionen
+
+#### `search_hotels(location, dates, preferences)`
+
+Diese Funktion ermöglicht es Benutzern, Hotels im HeyLou Travel-Knowledge Graph zu suchen. Die zurückgegebenen Daten basieren auf den angegebenen Standort, Datumsbereich und Vorlieben.
+
+#### `get_rates(hotel_id, date_range)`
+
+Gibt die Preise für ein spezifisches Hotel über einen bestimmten Zeitraum zurück, basierend auf der Anfrage des Benutzers an das Property Management System (PMS).
+
+#### `compare_otas(hotel_id, dates)`
+
+Vergleicht die OTA-Preise (Booking/Expedia/HRS) für ein spezifisches Hotel über einen bestimmten Zeitraum.
+
+#### `book_direct(hotel_id, room_type, guest, dates)`
+
+Ermöglicht den Direktbuchungsauftrag durch HeyLou ohne Kommission. Der Auftrag wird direkt an das Property Management System weitergeleitet und die Buchungsbestätigung zurückgegeben.
+
+#### `optimize_revenue(hotel_id)`
+
+Enthält einen Revenue-Optimizer Stub, der in Zukunft integriert werden soll, um den Einnahmen für ein Hotel zu maximieren.
