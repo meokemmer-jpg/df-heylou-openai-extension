@@ -1,0 +1,5 @@
+{
+  "verdict": "HOLLOW",
+  "reason": "Der Test prueft nur Defaults, Persistenz und hartcodierte Anzahl 5, aber keinen adversarialen Gegenfall fuer die fuenf konkreten Function-Definitions, Schemas oder K0-Logik.",
+  "ts": "2026-08-13T02:19:57.464016+00:00"
+}
