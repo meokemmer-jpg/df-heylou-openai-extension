@@ -1,5 +1,6 @@
 {
-  "verdict": "HOLLOW",
-  "reason": "Der Test prueft nur Defaults, Persistenz und hartcodierte Anzahl 5, aber keinen adversarialen Gegenfall fuer die fuenf konkreten Function-Definitions, Schemas oder K0-Logik.",
-  "ts": "2026-08-13T02:19:57.464016+00:00"
+  "verdict": "HOLDS",
+  "reason": "Der Test ruft die echte build_tool_payload-Funktion fuer openai und den adversarialen Gemini-Countercase auf, verifiziert unterschiedliche Wire-Formate sowie Ableitung aus dem echten Schema statt hartcodierter Testwerte.",
+  "ts": "2026-08-13T17:33:57.412634+00:00",
+  "attempts": 1
 }

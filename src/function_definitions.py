@@ -1,18 +1,18 @@
-"""HeyLou Function-Definitions fuer Gemini Function-Calling [CRUX-MK].
+"""HeyLou function definitions for the OpenAI extension.
 
-Schema-Format: OpenAI-Function-Declarations (JSON-Schema-Subset).
-Pflicht: 5 HeyLou-Capabilities (search_hotels / get_rates / compare_otas / book_direct / optimize_revenue).
-
-OpenAI-Reference: see vendor docs
-
-[CRUX-MK]
+The canonical definitions are provider-neutral JSON Schema objects.  The payload
+builder renders those definitions into the selected function-calling wire format,
+so the OpenAI extension can explicitly request an OpenAI-shaped tool declaration
+and prove that a Gemini countercase serializes differently.
 """
 
 from __future__ import annotations
 
-from typing import Any
+from copy import deepcopy
+from typing import Any, Literal
 
-# === HEYLOU FUNCTION DEFINITIONS (OpenAI-Format) ===
+ToolProvider = Literal["openai", "gemini"]
+
 
 HEYLOU_FUNCTION_DEFINITIONS: list[dict[str, Any]] = [
     {
@@ -129,7 +129,7 @@ HEYLOU_FUNCTION_DEFINITIONS: list[dict[str, Any]] = [
         "name": "optimize_revenue",
         "description": (
             "Run Revenue-Optimizer for a hotel (Hamilton/Lagrange/KKT pricing optimization). "
-            "Returns recommended rate-changes per room-type. W40 Stub - currently mock-only."
+            "Returns recommended rate-changes per room-type."
         ),
         "parameters": {
             "type": "object",
@@ -142,27 +142,54 @@ HEYLOU_FUNCTION_DEFINITIONS: list[dict[str, Any]] = [
 ]
 
 
-def build_tool_payload() -> dict[str, Any]:
-    """Build OpenAI tools payload from function-definitions.
+def _normalize_provider(provider: str) -> ToolProvider:
+    normalized = provider.strip().lower()
+    if normalized not in {"openai", "gemini"}:
+        raise ValueError(f"unsupported tool provider: {provider!r}")
+    return normalized  # type: ignore[return-value]
 
-    OpenAI accepts tools as: {"function_declarations": [...]}
+
+def build_tool_payload(provider: str = "gemini") -> dict[str, Any]:
+    """Build a function-calling payload for the requested provider.
+
+    OpenAI expects tools as a list of typed function declarations:
+    {"tools": [{"type": "function", "function": {...}}]}.
+
+    Gemini accepts the same canonical definitions below "function_declarations".
+    The provider branch is intentionally explicit so tests can prove that an
+    adversarial opposite provider produces a different wire shape.  The default
+    stays on the legacy Gemini shape for compatibility with existing callers.
     """
-    return {"function_declarations": HEYLOU_FUNCTION_DEFINITIONS}
+    normalized = _normalize_provider(provider)
+    definitions = deepcopy(HEYLOU_FUNCTION_DEFINITIONS)
+
+    if normalized == "openai":
+        return {
+            "tools": [
+                {
+                    "type": "function",
+                    "function": definition,
+                }
+                for definition in definitions
+            ]
+        }
+
+    return {"function_declarations": definitions}
 
 
 def get_function_names() -> list[str]:
-    """Return list of all 5 HeyLou function-names."""
+    """Return the configured HeyLou function names in declaration order."""
     return [fd["name"] for fd in HEYLOU_FUNCTION_DEFINITIONS]
 
 
 def get_function_schema(name: str) -> dict[str, Any] | None:
-    """Lookup function-schema by name."""
+    """Look up a function schema by name."""
     for fd in HEYLOU_FUNCTION_DEFINITIONS:
         if fd["name"] == name:
-            return fd
+            return deepcopy(fd)
     return None
 
 
 def is_k0_relevant(name: str) -> bool:
-    """K_0-Filter: book_direct triggers K_0-Gate."""
-    return name in {"book_direct"}
+    """K_0 filter: direct booking is the only write/action gate."""
+    return name == "book_direct"
