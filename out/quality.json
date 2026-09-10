@@ -1,10 +1,10 @@
 {
   "df": "df-heylou-openai-extension",
-  "ts": "2026-09-10T00:27:00.164673+00:00",
+  "ts": "2026-09-10T03:21:56.552443+00:00",
   "maturity": "TESTED",
   "maturity_level": 4,
   "evidence_grade": 3,
   "grade_basis": "pytest-gruen + HOLDS-verifiziert, 0 externe Belege (consumed-Quittung/Real-Receipt) -> max Grade-3",
-  "wargame_verdict": "CONDITIONAL",
+  "wargame_verdict": null,
   "crux": "[CRUX-MK]"
 }
